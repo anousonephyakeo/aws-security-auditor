@@ -1,15 +1,66 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   test:
+    name: 🧪 Tests + Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - run: pip install pytest moto[all]
-      - run: pytest tests/ -v --tb=short
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest moto[all] pytest-cov
+      - name: Run tests with coverage
+        run: pytest tests/ -v --tb=short --cov=auditor --cov-report=xml --cov-report=term-missing
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: false
+
+  lint:
+    name: 🔍 Lint (ruff + black)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff black
+      - run: ruff check auditor/ tests/
+      - run: black --check auditor/ tests/
+
+  sast:
+    name: 🛡️ SAST (bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install bandit
+      - name: Run bandit SAST scan
+        run: bandit -r auditor/ -ll -q --skip B101
+        # Fails on HIGH or CRITICAL severity findings only (-ll)
+
+  dependency-scan:
+    name: 📦 Dependency CVE Scan (safety)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install safety
+      - name: Check dependencies for known CVEs
+        run: safety check -r requirements.txt --continue-on-error
