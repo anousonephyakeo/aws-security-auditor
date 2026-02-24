@@ -1,7 +1,7 @@
 """Reporter — formats findings into terminal output, JSON, and Markdown."""
 import json
 from typing import List, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 
 SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "OK": 4}
 SEVERITY_COLORS = {
@@ -25,7 +25,7 @@ class Reporter:
         """Print color-coded findings to the terminal."""
         print(f"\n{'='*60}")
         print(f"  AWS Security Auditor — SW1ZX")
-        print(f"  {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+        print(f"  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC")
         print(f"{'='*60}\n")
         if not self.findings:
             print("  ✅  No findings — environment looks clean!")
@@ -44,7 +44,7 @@ class Reporter:
 
     def to_json(self, path: str = None) -> str:
         data = {
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "total": len(self.findings),
             "findings": self.findings,
         }
@@ -57,7 +57,7 @@ class Reporter:
     def to_markdown(self, path: str = None) -> str:
         lines = [
             "# AWS Security Audit Report",
-            f"*Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}*\n",
+            f"*Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*\n",
             f"**Total findings: {len(self.findings)}**\n",
             "| Severity | Check | Resource | Message |",
             "|----------|-------|----------|---------|",

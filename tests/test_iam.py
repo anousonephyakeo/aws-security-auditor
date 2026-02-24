@@ -38,9 +38,15 @@ def test_admin_user_detected():
     session = boto3.Session(region_name="us-east-1")
     iam = session.client("iam")
     iam.create_user(UserName="admin-test")
+    # moto doesn't ship with AWS managed policies — create it manually
+    iam.create_policy(
+        PolicyName="AdministratorAccess",
+        PolicyDocument='{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}',
+    )
+    account_id = session.client("sts").get_caller_identity()["Account"]
     iam.attach_user_policy(
         UserName="admin-test",
-        PolicyArn="arn:aws:iam::aws:policy/AdministratorAccess",
+        PolicyArn=f"arn:aws:iam::{account_id}:policy/AdministratorAccess",
     )
     auditor = IAMAuditor(session)
     results = auditor.check_admin_users()
