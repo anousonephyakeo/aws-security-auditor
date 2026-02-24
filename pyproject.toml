@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "aws-security-auditor"
+version = "1.0.0"
+description = "Automated AWS cloud misconfiguration scanner for IAM, S3, EC2, and CloudTrail"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Anousone Phyakeo (SW1ZX)", email = "anousonephyakeo@github.com" }]
+keywords = ["aws", "security", "cloud", "pentest", "auditor", "iam", "s3", "ec2"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+requires-python = ">=3.9"
+dependencies = ["boto3>=1.28", "requests>=2.31", "rich>=13.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "moto[all]>=5", "pytest-cov>=4", "bandit>=1.7", "safety>=3", "ruff>=0.3", "black>=24"]
+
+[project.scripts]
+aws-audit = "auditor.cli:main"
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["auditor"]
+omit = ["tests/*"]
+
+[tool.bandit]
+targets = ["auditor"]
+skips = ["B101"]
