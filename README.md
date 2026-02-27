@@ -51,35 +51,38 @@ AWS Security Auditor is not just a linter—it is an aggressive, fast-paced reco
 
 <br>
 
-## 🚀 Installation & Execution
+## 🚀 Quick Start & Execution
 
 Get running in seconds. AWS Security Auditor automatically hooks into your local AWS CLI credentials profile.
 
+### 1. Installation
 ```bash
-# 1. Clone the repository
 git clone https://github.com/anousonephyakeo/aws-security-auditor.git
 cd aws-security-auditor
-
-# 2. Install requirements (Rich UI engine + Boto3)
 pip install -r requirements.txt
-
-# 3. Launch full audit
-python -m auditor.cli
 ```
 
-### 🎛️ Advanced Targeting
+### 2. General Audit (Basic Usage)
+```bash
+# Basic audit using your default AWS profile
+python3 -m auditor.cli
 
+# Audit a specific production profile
+python3 -m auditor.cli --profile [YOUR_PROFILE_NAME]
+```
+
+### 3. Advanced Filtering & Output
 Target specific regions, modules, or output the findings directly into CI/CD pipelines via JSON.
 
 ```bash
 # Target ap-southeast-1 using a specific AWS profile
-python -m auditor.cli --profile production --region ap-southeast-1
+python3 -m auditor.cli --profile [YOUR_PROFILE_NAME] --region ap-southeast-1
 
 # Run only IAM and S3 modules
-python -m auditor.cli --checks iam s3
+python3 -m auditor.cli --checks iam s3
 
 # Deep integration: Export structured JSON reports
-python -m auditor.cli --output json --report-file audit_results.json
+python3 -m auditor.cli --output json --report-file audit_results.json
 ```
 
 <br>
