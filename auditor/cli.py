@@ -111,11 +111,25 @@ Examples:
     parser.add_argument("--report-file", help="Output file path for json/markdown reports")
     args = parser.parse_args()
 
-    console.print(Panel.fit(
-        "[bold cyan]🔐  AWS Security Auditor[/bold cyan]\n"
-        "[dim]by SW1ZX | github.com/anousonephyakeo[/dim]",
-        border_style="cyan",
-    ))
+    # Cyberpunk Hacker Aesthetic Banner
+    BANNER = """
+    █████╗ ███████╗██╗   ██╗███╗   ██╗██████╗ 
+    ██╔══██╗██╔════╝██║   ██║████╗  ██║██╔══██╗
+    ███████║███████╗██║   ██║██╔██╗ ██║██║  ██║
+    ██╔══██║╚════██║██║   ██║██║╚██╗██║██║  ██║
+    ██║  ██║███████║╚██████╔╝██║ ╚████║██████╔╝
+    ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═════╝ 
+    """
+    
+    if args.output != "json":
+        console.print(Text(BANNER, style="bold cyan"))
+        console.print(Panel.fit(
+            "[bold cyan]🔐 AWS Security Auditor v2.0[/bold cyan]\n"
+            "[dim white]Aggressive Cloud Recon & Misconfiguration Scanner[/dim white]\n"
+            "[dim]by SW1ZX | github.com/anousonephyakeo[/dim]",
+            border_style="magenta",
+            box=box.HEAVY
+        ))
 
     try:
         session = build_session(args.profile, args.region)
@@ -136,19 +150,24 @@ Examples:
     if run_all or "cloudtrail" in args.checks:
         checkers.append(("CloudTrail", CloudTrailAuditor))
 
-    with Progress(
-        SpinnerColumn(style="cyan"),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(bar_width=30, style="cyan", complete_style="bright_cyan"),
-        console=console,
-        transient=True,
-    ) as progress:
-        task = progress.add_task("Running checks...", total=len(checkers))
+    if args.output != "json":
+        with Progress(
+            SpinnerColumn(style="cyan"),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(bar_width=30, style="cyan", complete_style="bright_cyan"),
+            console=console,
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Running checks...", total=len(checkers))
+            for name, CheckerClass in checkers:
+                progress.update(task, description=f"[cyan]Running {name} checks...")
+                findings = CheckerClass(session).run_all()
+                all_findings.extend(findings)
+                progress.advance(task)
+    else:
         for name, CheckerClass in checkers:
-            progress.update(task, description=f"[cyan]Running {name} checks...")
             findings = CheckerClass(session).run_all()
             all_findings.extend(findings)
-            progress.advance(task)
 
     reporter = Reporter(all_findings)
 
@@ -169,10 +188,12 @@ Examples:
 
     critical = sum(1 for f in all_findings if f.get("severity") == "CRITICAL")
     if critical > 0:
-        console.print(f"[bold red]🚨  {critical} CRITICAL finding(s) — immediate action required![/bold red]")
+        if args.output != "json":
+            console.print(f"[bold red]🚨  {critical} CRITICAL finding(s) — immediate action required![/bold red]")
         sys.exit(1)
     else:
-        console.print("[bold green]✅  Scan complete — no critical findings.[/bold green]")
+        if args.output != "json":
+            console.print("[bold green]✅  Scan complete — no critical findings.[/bold green]")
         sys.exit(0)
 
 
